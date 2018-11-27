@@ -326,21 +326,33 @@ public class TileMap : MonoBehaviour
         }
 
         List<Node> selectableTiles = new List<Node>();
+        List<Node> attackableTiles = new List<Node>();
 
         // Remove tile highlights from the previously selected character.
         RemoveHighlightedTiles();
 
         foreach (Node tile in graph)
         {
-            if (distance[tile] >= 0 && distance[tile] <= selectedUnit.movementSpeed)
+            if (distance[tile] >= 0 && distance[tile] <= selectedUnit.movementSpeed + selectedUnit.attackRange)
             {
-                tileVisuals[tile.x, tile.y].GetComponent<Renderer>().material.color = Color.blue;
-                selectableTiles.Add(tile);
+                // ??????????
+                if (distance[tile] <= selectedUnit.movementSpeed)
+                {
+                    tileVisuals[tile.x, tile.y].GetComponent<Renderer>().material.color = Color.blue;
+                    selectableTiles.Add(tile);
+                    attackableTiles.Add(tile);
+                }
+                else
+                {
+                    tileVisuals[tile.x, tile.y].GetComponent<Renderer>().material.color = Color.red;
+                    attackableTiles.Add(tile);
+                }
                 //Debug.Log(tile.x + ", " + tile.y);
             }
         }
 
         selectedUnit.selectableTiles = selectableTiles;
+        selectedUnit.attackableTiles = attackableTiles;
     }
 
     /* Generates the path from source to target using Djikstra's Algorithm */
@@ -411,12 +423,21 @@ public class TileMap : MonoBehaviour
 
         foreach (Node tile in graph)
         {
-            if (distance[tile] >= 0 && distance[tile] <= unit.movementSpeed)
+            if (distance[tile] >= 0 && distance[tile] <= unit.movementSpeed + unit.attackRange)
             {
-                tileVisuals[tile.x, tile.y].GetComponent<Renderer>().material.color = Color.blue;
-                selectableTiles.Add(tile);
+                // ???????
+                if (distance[tile] <= unit.movementSpeed)
+                {
+                    tileVisuals[tile.x, tile.y].GetComponent<Renderer>().material.color = Color.blue;
+                    selectableTiles.Add(tile);
+                }
+                else
+                {
+                    tileVisuals[tile.x, tile.y].GetComponent<Renderer>().material.color = Color.red;
+                }
                 //Debug.Log(tile.x + ", " + tile.y);
             }
+
         }
 
 

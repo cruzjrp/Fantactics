@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class TurnManager : MonoBehaviour {
 
-    public Unit[] units;
+    public Unit[] allyUnits;
+    public Unit[] enemyUnits;
     public Camera mainCamera;
     public TileMap map;
     public GameObject tileHighlighter;
@@ -16,7 +17,7 @@ public class TurnManager : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
-        if (CheckTurnEnded())
+        if (CheckTurnEnded(allyUnits))
         {
             StartTurn();
         }
@@ -122,7 +123,7 @@ public class TurnManager : MonoBehaviour {
             }
         }
 
-        if (CheckTurnEnded())
+        if (CheckTurnEnded(allyUnits))
         {
             // Start the enemy's turn.
         }
@@ -142,17 +143,17 @@ public class TurnManager : MonoBehaviour {
         {
             map.selectedUnit = unitOnMouse;
             map.unitSelected = true;
-            Debug.Log(unitOnMouse.transform.name + " Selected!");
+            Debug.Log(unitOnMouse.transform.name + " Selected! HP = " + unitOnMouse.hp + ".");
         }
     }
 
     public Unit GetUnitOnMouse(int x, int y)
     {
-        for (int i = 0; i < units.Length; i++)
+        for (int i = 0; i < allyUnits.Length; i++)
         {
-            if (units[i].tileX == x && units[i].tileY == y)
+            if (allyUnits[i].tileX == x && allyUnits[i].tileY == y)
             {
-                return units[i];
+                return allyUnits[i];
             }
         }
         return null;
@@ -160,9 +161,9 @@ public class TurnManager : MonoBehaviour {
 
     public bool CheckOccupiedTile(int x, int y)
     {
-        for (int i = 0; i < units.Length; i++)
+        for (int i = 0; i < allyUnits.Length; i++)
         {
-            if (units[i].tileX == x && units[i].tileY == y)
+            if (allyUnits[i].tileX == x && allyUnits[i].tileY == y)
             {
                 return true;
             }
@@ -213,13 +214,13 @@ public class TurnManager : MonoBehaviour {
 
     public void StartTurn()
     {
-        for (int i = 0; i < units.Length; i++)
+        for (int i = 0; i < allyUnits.Length; i++)
         {
-            units[i].turnTaken = false;
-            units[i].GetComponentInChildren<Renderer>().material.color = Color.white;
+            allyUnits[i].turnTaken = false;
+            allyUnits[i].GetComponentInChildren<Renderer>().material.color = Color.white;
         }
 
-        //map.selectedUnit = units[0];
+        //map.selectedUnit = allyUnits[0];
         //map.unitSelected = true;
 
     }
@@ -229,7 +230,7 @@ public class TurnManager : MonoBehaviour {
 
     }
 
-    public bool CheckTurnEnded()
+    public bool CheckTurnEnded(Unit[] units)
     {
         bool turnEnded = true;
 
