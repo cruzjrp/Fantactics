@@ -6,6 +6,9 @@ public class TileMap : MonoBehaviour
 
     public Unit selectedUnit;
     public bool unitSelected = false;
+    public Unit selectedToAttack;
+    public bool toAttackSelected = false;
+
     public int mapSizeX = 10;
     public int mapSizeY = 10;
     public TurnManager turnManager;
@@ -269,6 +272,7 @@ public class TileMap : MonoBehaviour
     {
         // Clear out our unit's old selectableTiles
         selectedUnit.selectableTiles = null;
+        //selectedUnit.attackableTiles = null;
 
         // Dictionary of the distance of all nodes from the source
         Dictionary<Node, float> distance = new Dictionary<Node, float>();
@@ -338,17 +342,40 @@ public class TileMap : MonoBehaviour
                 // ??????????
                 if (distance[tile] <= selectedUnit.movementSpeed)
                 {
-                    tileVisuals[tile.x, tile.y].GetComponent<Renderer>().material.color = Color.blue;
+                    //tileVisuals[tile.x, tile.y].GetComponent<Renderer>().material.color = Color.blue;
                     selectableTiles.Add(tile);
-                    attackableTiles.Add(tile);
+                    //attackableTiles.Add(tile);
                 }
                 else
                 {
-                    tileVisuals[tile.x, tile.y].GetComponent<Renderer>().material.color = Color.red;
-                    attackableTiles.Add(tile);
+                    //tileVisuals[tile.x, tile.y].GetComponent<Renderer>().material.color = Color.red;
+                    //attackableTiles.Add(tile);
                 }
                 //Debug.Log(tile.x + ", " + tile.y);
             }
+        }
+
+        foreach (Node node in selectableTiles)
+        {
+            foreach (Node neighbor in node.neighbors)
+            {
+                tileVisuals[neighbor.x, neighbor.y].GetComponent<Renderer>().material.color = Color.red;
+                attackableTiles.Add(neighbor);
+
+                if (selectedUnit.attackRange == 2)
+                {
+                    foreach (Node n in neighbor.neighbors)
+                    {
+                        tileVisuals[n.x, n.y].GetComponent<Renderer>().material.color = Color.red;
+                        attackableTiles.Add(n);
+                    }
+                }
+            }
+        }
+
+        foreach (Node node in selectableTiles)
+        {
+            tileVisuals[node.x, node.y].GetComponent<Renderer>().material.color = Color.blue;
         }
 
         selectedUnit.selectableTiles = selectableTiles;
@@ -428,19 +455,128 @@ public class TileMap : MonoBehaviour
                 // ???????
                 if (distance[tile] <= unit.movementSpeed)
                 {
-                    tileVisuals[tile.x, tile.y].GetComponent<Renderer>().material.color = Color.blue;
+                    //tileVisuals[tile.x, tile.y].GetComponent<Renderer>().material.color = Color.blue;
                     selectableTiles.Add(tile);
                 }
-                else
-                {
-                    tileVisuals[tile.x, tile.y].GetComponent<Renderer>().material.color = Color.red;
-                }
-                //Debug.Log(tile.x + ", " + tile.y);
             }
-
         }
 
+        foreach (Node node in selectableTiles)
+        {
+            foreach (Node neighbor in node.neighbors)
+            {
+                tileVisuals[neighbor.x, neighbor.y].GetComponent<Renderer>().material.color = Color.red;
 
+                if (unit.attackRange == 2)
+                {
+                    foreach (Node n in neighbor.neighbors)
+                    {
+                        tileVisuals[n.x, n.y].GetComponent<Renderer>().material.color = Color.red;
+                    }
+                }
+            }
+        }
+
+        foreach (Node node in selectableTiles)
+        {
+            tileVisuals[node.x, node.y].GetComponent<Renderer>().material.color = Color.blue;
+        }
+
+    }
+
+    /* Generates the path from source to target using Djikstra's Algorithm */
+    public void GenerateAttackableTiles(Unit unit)
+    {
+        // Clear out our unit's old selectableTiles
+        unit.attackableTiles = null;
+
+        List<Node> attackableTiles = new List<Node>();
+        if (!unit.hasMoved)
+        {
+            foreach (Node node in unit.selectableTiles)
+            {
+                foreach (Node neighbor in node.neighbors)
+                {
+                    tileVisuals[neighbor.x, neighbor.y].GetComponent<Renderer>().material.color = Color.red;
+                    attackableTiles.Add(neighbor);
+
+                    if (unit.attackRange == 2)
+                    {
+                        foreach (Node n in neighbor.neighbors)
+                        {
+                            tileVisuals[n.x, n.y].GetComponent<Renderer>().material.color = Color.red;
+                            attackableTiles.Add(n);
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            foreach (Node neighbor in graph[unit.tileX, unit.tileY].neighbors)
+            {
+                tileVisuals[neighbor.x, neighbor.y].GetComponent<Renderer>().material.color = Color.red;
+                attackableTiles.Add(neighbor);
+
+                if (unit.attackRange == 2)
+                {
+                    foreach (Node n in neighbor.neighbors)
+                    {
+                        tileVisuals[n.x, n.y].GetComponent<Renderer>().material.color = Color.red;
+                        attackableTiles.Add(n);
+                    }
+                }
+            }
+        }
+        unit.attackableTiles = attackableTiles;
+    }
+
+    /* Generates the path from source to target using Djikstra's Algorithm */
+    public void GenerateAttackableTiles()
+    {
+        // Clear out our unit's old selectableTiles
+        selectedUnit.attackableTiles = null;
+
+        List<Node> attackableTiles = new List<Node>();
+
+        if (!selectedUnit.hasMoved)
+        {
+            foreach (Node node in selectedUnit.selectableTiles)
+            {
+                foreach (Node neighbor in node.neighbors)
+                {
+                    tileVisuals[neighbor.x, neighbor.y].GetComponent<Renderer>().material.color = Color.red;
+                    attackableTiles.Add(neighbor);
+
+                    if (selectedUnit.attackRange == 2)
+                    {
+                        foreach (Node n in neighbor.neighbors)
+                        {
+                            tileVisuals[n.x, n.y].GetComponent<Renderer>().material.color = Color.red;
+                            attackableTiles.Add(n);
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            foreach (Node neighbor in graph[selectedUnit.tileX, selectedUnit.tileY].neighbors)
+            {
+                tileVisuals[neighbor.x, neighbor.y].GetComponent<Renderer>().material.color = Color.red;
+                attackableTiles.Add(neighbor);
+
+                if (selectedUnit.attackRange == 2)
+                {
+                    foreach (Node n in neighbor.neighbors)
+                    {
+                        tileVisuals[n.x, n.y].GetComponent<Renderer>().material.color = Color.red;
+                        attackableTiles.Add(n);
+                    }
+                }
+            }
+        }
+        selectedUnit.attackableTiles = attackableTiles;
     }
 
     /* Allows the player to manually create their own path for the selected unit, while fixing user errors.   

@@ -57,6 +57,7 @@ public class TurnManager : MonoBehaviour {
                     if (!unitOnTile.turnTaken)
                     {
                         map.GenerateSelectableTiles(unitOnTile);
+                        //map.GenerateAttackableTiles(unitOnTile);
                     }
                 }
                 else if (!CheckOccupiedTile(tileHitX, tileHitY))
@@ -84,15 +85,39 @@ public class TurnManager : MonoBehaviour {
 
                 else if (map.unitSelected)
                 {
-                    // Check if the clicked tile you want to move to is within the selectable tiles of the selected unit and has no unit already on it
-                    if (map.selectedUnit.selectableTiles.Contains(map.GetNode(tileHitX, tileHitY)) && GetUnitOnMouse(tileHitX, tileHitY) == null )
-                        //&& CheckOccupiedTile(map.selectedUnit.currentPath[map.selectedUnit.currentPath.Count - 1].x, map.selectedUnit.currentPath[map.selectedUnit.currentPath.Count - 1].x))
+                    if (!map.selectedUnit.hasMoved)
                     {
-                        // Move the unit
-                        MoveNextTile(map.selectedUnit);
-                        EndUnitTurn();
-                        //map.GenerateSelectableTiles();
+                        // Check if the clicked tile you want to move to is within the selectable tiles of the selected unit and has no unit already on it
+                        if (map.selectedUnit.selectableTiles.Contains(map.GetNode(tileHitX, tileHitY)) && GetUnitOnMouse(tileHitX, tileHitY) == null)
+                        //&& CheckOccupiedTile(map.selectedUnit.currentPath[map.selectedUnit.currentPath.Count - 1].x, map.selectedUnit.currentPath[map.selectedUnit.currentPath.Count - 1].x))
+                        {
+                            // Move the unit
+                            MoveNextTile(map.selectedUnit);
+                            map.selectedUnit.hasMoved = true;
+                            map.RemoveHighlightedTiles();
+                            map.GenerateAttackableTiles();
+                            //EndUnitTurn();
+                            //map.GenerateSelectableTiles();
+                        }
                     }
+
+                    else
+                    {
+                        if (map.selectedUnit.attackableTiles.Contains(map.GetNode(tileHitX, tileHitY)) && !GetUnitOnMouse(tileHitX, tileHitY).ally)
+                        {
+                            Attack(map.selectedUnit, GetUnitOnMouse(tileHitX, tileHitY));
+                            EndUnitTurn();
+                        }
+                    }
+
+                }
+            }
+
+            if (Input.GetKeyUp("space"))
+            {
+                if (map.unitSelected)
+                {
+                    EndUnitTurn();
                 }
             }
         }
@@ -100,7 +125,7 @@ public class TurnManager : MonoBehaviour {
         // When right click is pressed, it unselects the unit and removes the selectable tiles
         if (Input.GetMouseButtonUp(1))
         {
-            if (map.unitSelected)
+            if (map.unitSelected && !map.selectedUnit.hasMoved)
             {
                 map.unitSelected = false;
                 map.selectedUnit.currentPath = null;
@@ -108,7 +133,7 @@ public class TurnManager : MonoBehaviour {
             }
         }
 
-        if (map.unitSelected)
+        if (map.unitSelected && !map.selectedUnit.hasMoved)
         {
             if (map.selectedUnit.currentPath != null)
             {
@@ -154,6 +179,14 @@ public class TurnManager : MonoBehaviour {
             if (allyUnits[i].tileX == x && allyUnits[i].tileY == y)
             {
                 return allyUnits[i];
+            }
+        }
+
+        for (int i = 0; i < enemyUnits.Length; i++)
+        {
+            if (enemyUnits[i].tileX == x && enemyUnits[i].tileY == y)
+            {
+                return enemyUnits[i];
             }
         }
         return null;
@@ -217,6 +250,7 @@ public class TurnManager : MonoBehaviour {
         for (int i = 0; i < allyUnits.Length; i++)
         {
             allyUnits[i].turnTaken = false;
+            allyUnits[i].hasMoved = false;
             allyUnits[i].GetComponentInChildren<Renderer>().material.color = Color.white;
         }
 
@@ -267,5 +301,42 @@ public class TurnManager : MonoBehaviour {
         lr.SetPosition(0, start);
         lr.SetPosition(1, end);
         GameObject.Destroy(myline, 0.1f);
+    }
+
+    void Attack(Unit attacker, Unit defender)
+    {
+        float defense = 1.0f - defender.defense / 100.0f;
+        int damage = Mathf.RoundToInt(attacker.strength * defense);
+        defender.hp -= damage;
+        Debug.Log(defender.name + " remaining HP: " + defender.hp);
+
+        if (defender.hp <= 0)
+        {
+            UnitDie(defender);
+        }
+    }
+
+    void UnitDie(Unit unit)
+    {
+        if (unit.ally)
+        {
+            for (int i = 0; i < allyUnits.Length; i++)
+            {
+                if (unit == allyUnits[i])
+                {
+                    allyUnits[i] = null;
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < enemyUnits.Length; i++)
+            {
+                if (unit == enemyUnits[i])
+                {
+                    enemyUnits[i] = null;
+                }
+            }
+        }
     }
 }

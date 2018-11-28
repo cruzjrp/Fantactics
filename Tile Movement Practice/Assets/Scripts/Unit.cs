@@ -8,6 +8,7 @@ public class Unit : MonoBehaviour {
     public int tileY;
     public TileMap map;
     public bool turnTaken = false;
+    public bool hasMoved = false;
     public List<Node> currentPath = null;
     public List<Node> selectableTiles = null;
     public List<Node> attackableTiles = null;
@@ -18,4 +19,12 @@ public class Unit : MonoBehaviour {
     public int movementSpeed = 3;
     public int attackRange = 1;
     public bool ally = true;
+
+    void Update()
+    {
+        if (this.hp <= 0)
+        {
+            Destroy(gameObject);
+        }
+    }
 }
